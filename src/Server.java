@@ -1,5 +1,8 @@
+import java.rmi.NotBoundException;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -11,10 +14,13 @@ public class Server extends UnicastRemoteObject implements IServer{
     HashMap<String, Channel> channelMap; // map fruitName to channel
     ArrayList<FruitItem> fruitItemList;
     ConsumerThread consumer;
+    String response;
+    HashMap<String, IClient> stubMap; // name, stub
 
     public Server() throws RemoteException {
         channelMap = new HashMap<>();
         fruitItemList = new ArrayList<>();
+        stubMap = new HashMap<>();
     }
 
     @Override
@@ -44,30 +50,29 @@ public class Server extends UnicastRemoteObject implements IServer{
     }
 
     @Override
-    public void subscribe(String fruitName, SubscriberClient subscriber) throws RemoteException {
+    public void subscribe(String fruitName, String subscriberName) throws RemoteException {
         if(channelMap.containsKey(fruitName)){
             Channel channel = channelMap.get(fruitName);
-            channel.addSubscriber(subscriber);
+            channel.addSubscriber(subscriberName);
             System.out.println("successfully subscribe to " + fruitName);
         }
         else{
             Channel channel = new Channel(fruitName);
-            channel.addSubscriber(subscriber);
+            channel.addSubscriber(subscriberName);
 
             channelMap.put(fruitName, channel);
 
             consumer = new ConsumerThread(channel);
 
             consumer.start();
-//            channel.start();
         }
     }
 
     @Override
-    public void unsubscribe(String fruitName, SubscriberClient subscriber) throws RemoteException {
+    public void unsubscribe(String fruitName, String subscriberName) throws RemoteException {
         if(channelMap.containsKey(fruitName)){
             Channel channel = channelMap.get(fruitName);
-            channel.removeSubscriber(subscriber);
+            channel.removeSubscriber(subscriberName);
             System.out.println("successfully unsubscribe to " + fruitName);
         }
         else{
@@ -77,25 +82,56 @@ public class Server extends UnicastRemoteObject implements IServer{
     }
 
     @Override
-    public void publish(Event event){
+    public void publish(Event event) throws RemoteException {
         System.out.println("starts publishing");
 
         for(int i = 0; i < fruitItemList.size(); i++){
-            if(fruitItemList.get(i).equals(event.fruitItem)){
+            if(fruitItemList.get(i).fruitName.equals(event.fruitItem.fruitName)){
                 System.out.println("fruit already exists");
                 return;
             }
         }
 
         fruitItemList.add(event.fruitItem);
+        ArrayList<String> subscriberList = channelMap.get(event.fruitItem.fruitName).getSubscriberList();
+        System.out.println(subscriberList);
+        try{
+            for(String subscriberName: channelMap.get(event.fruitItem.fruitName).getSubscriberList()){
 
-        for(SubscriberClient subscriber: channelMap.get(event.fruitItem.fruitName).getSubscriberList()){
-//            if(subscriber.equals(event.publisher)){
-//                continue;
-//            }
+                IClient stub = stubMap.get(subscriberName);
+//                System.out.println("server: client stub registered");
 
-            subscriber.notify(event.toString());
+                stub.notify("fruit name: " + event.fruitItem.fruitName + " fruit price: " + event.fruitItem.price);
+                System.out.println(subscriberName);
+            }
+        } catch (RemoteException e) {
+            e.printStackTrace();
         }
+
+    }
+
+    @Override
+    public void register(int port, String name) throws RemoteException {
+
+        try{
+            Registry registry = LocateRegistry.getRegistry(null, port);
+            IClient stub = (IClient) registry.lookup(name);
+            stub.notify("hddddddddd");
+            stubMap.put(name, stub);
+        } catch (NotBoundException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    @Override
+    public void notify(String message) throws RemoteException {
+        System.out.println(message);
+    }
+
+    @Override
+    public String notifyClient() throws RemoteException {
+        return response;
     }
 
     @Override

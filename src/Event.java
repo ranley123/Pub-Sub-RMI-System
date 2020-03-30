@@ -4,13 +4,13 @@ import java.sql.Timestamp;
 public class Event implements Serializable {
     String type;
     Timestamp timestamp;
-    int publisherId;
+    int publisher;
     FruitItem fruitItem;
 
-    public Event(String type, Timestamp timestamp, int publisherId, FruitItem fruitItem){
+    public Event(String type, Timestamp timestamp, int publisher, FruitItem fruitItem){
         this.type = type;
         this.timestamp = timestamp;
-        this.publisherId = publisherId;
+        this.publisher = publisher;
         this.fruitItem = fruitItem;
     }
 

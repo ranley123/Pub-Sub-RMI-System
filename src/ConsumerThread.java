@@ -28,10 +28,10 @@ public class ConsumerThread extends Thread {
         try{
             while(true){
                 event = channel.consume();
-                if(event == null)
-                    System.out.println("event: null");
-                else
-                    System.out.println("event: " + event.toString());
+//                if(event == null)
+//                    System.out.println("event: null");
+//                else
+//                    System.out.println("event: " + event.toString());
                 if(event == null)
                     sleep(500);
                 else

@@ -1,3 +1,4 @@
+import java.io.Serializable;
 import java.rmi.AccessException;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
@@ -8,7 +9,7 @@ import java.sql.Timestamp;
 import java.util.Date;
 import java.util.Scanner;
 
-public class PublisherClient extends UnicastRemoteObject implements IClient{
+public class PublisherClient extends UnicastRemoteObject implements IClient, Serializable {
     private IServer stub;
     int id;
 
@@ -65,12 +66,12 @@ public class PublisherClient extends UnicastRemoteObject implements IClient{
                 FruitItem fruitItem;
                 switch (operation) {
                     case 0:
-//                    System.out.println("Enter Fruit Name: ");
-//                    String fruitName = scanner.nextLine();
-//                    System.out.println("Enter Fruit Price: ");
-//                    double price = scanner.nextDouble();
+                    System.out.println("Enter Fruit Name: ");
+                    String fruitName = scanner.next();
+                    System.out.println("Enter Fruit Price: ");
+                    double price = scanner.nextDouble();
 
-                        fruitItem = new FruitItem("apple", 0.99);
+                        fruitItem = new FruitItem(fruitName, price);
                         publisher.generatePublishEvent(fruitItem);
                         System.out.println("published");
 
