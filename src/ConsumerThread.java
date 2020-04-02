@@ -5,10 +5,10 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 
 public class ConsumerThread extends Thread {
-    private Channel channel;
+    private EventChannel channel;
     private IServer stub;
 
-    public ConsumerThread(Channel channel){
+    public ConsumerThread(EventChannel channel){
         this.channel = channel;
         try{
             Registry registry = LocateRegistry.getRegistry(null, 1888);

@@ -21,13 +21,12 @@ public class SubscriberClient extends SubscriberClientImpl{
             // look for server stub
             Registry registry = LocateRegistry.getRegistry(null, 1888);
             subscriber.stub = (IServer) registry.lookup("server");
-            System.out.println("Subscriber Registered");
 
             boolean exit = false;
 
             // build own client stub
             IClient ownStub = (IClient) subscriber;
-            Registry clientRegistry = LocateRegistry.createRegistry(1887);
+            Registry clientRegistry = LocateRegistry.createRegistry(subscriber.port);
             clientRegistry.rebind(subscriber.name, ownStub);
             subscriber.stub.register(subscriber.port, subscriber.name);
 

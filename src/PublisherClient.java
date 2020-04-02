@@ -26,7 +26,9 @@ public class PublisherClient extends UnicastRemoteObject implements IClient, Ser
         long time = date.getTime();
         Timestamp ts = new Timestamp(time);
         Event publishEvent = new Event("publish", ts, this.id, fruitItem);
-        stub.addEvent(publishEvent);
+        int errcode = stub.addEvent(publishEvent);
+        errorHandler(errcode);
+
     }
 
     private void update(FruitItem fruitItem){
@@ -93,6 +95,22 @@ public class PublisherClient extends UnicastRemoteObject implements IClient, Ser
             e.printStackTrace();
         } catch (NotBoundException e) {
             e.printStackTrace();
+        }
+    }
+
+    private void errorHandler(int errcode){
+        switch (errcode){
+            case 0:
+                System.out.println("successful");
+                break;
+            case 1:
+                System.out.println("too many queries");
+            case 2:
+                System.out.println("connection failures");
+            case 3:
+                System.out.println("crashing customers");
+            case 4:
+                System.out.println("dropped messages");
         }
     }
 }

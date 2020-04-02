@@ -5,11 +5,7 @@ public interface IServer extends Remote{
     public void unsubscribe(String channel, String subscriberName) throws RemoteException;
     public void publish(Event event) throws RemoteException;
     public void register(int port, String name) throws RemoteException;
-    public void notify(String message) throws RemoteException;
-    public String notifyClient() throws RemoteException;
-    public void update(Event event) throws RemoteException;
-    public String ping() throws RemoteException;
-
-    public void addEvent(Event event) throws RemoteException;
-//    void delete(Event event);
+    public void notify(Message message) throws RemoteException;
+    public void receiveMessage(Message message) throws RemoteException;
+    public int addEvent(Event event) throws RemoteException;
 }

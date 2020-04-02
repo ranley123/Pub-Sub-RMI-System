@@ -7,9 +7,13 @@ public class SubscriberClientImpl extends UnicastRemoteObject implements IClient
     IServer stub;
     int port;
 
+
     @Override
     public void notify(String message) throws RemoteException {
         System.out.println("Subscriber client: " + message);
+        String fruitName = "apple";
+        Message response = new Message("response", fruitName + " received", 0, this.name);
+        stub.receiveMessage(response);
     }
 
     public SubscriberClientImpl() throws RemoteException{
