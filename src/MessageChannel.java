@@ -1,5 +1,7 @@
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Queue;
+import java.util.UUID;
 
 public class MessageChannel {
     private Queue<Message> messageQueue;
@@ -7,13 +9,15 @@ public class MessageChannel {
     private String name;
     MessageThread messageThread;
     private ServerImpl server;
+    ArrayList<String> subscriberList;
+    Message relatedMessage;
 
-    public MessageChannel(ServerImpl server, String name){
+    public MessageChannel(ServerImpl server, Message relatedMessage, ArrayList<String> subscriberList, String name){
         this.server = server;
         this.name = name;
         messageQueue = new LinkedList<>();
-        messageThread = new MessageThread(server, this);
-        messageThread.start();
+        this.subscriberList = subscriberList;
+        this.relatedMessage = relatedMessage;
     }
 
     public synchronized int produce(Message message){
@@ -34,5 +38,9 @@ public class MessageChannel {
             return messageQueue.poll();
     }
 
+    public void startReceivingMessage(){
+        messageThread = new MessageThread(server, this);
+        messageThread.start();
+    }
 
 }

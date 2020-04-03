@@ -1,16 +1,17 @@
 import java.io.Serializable;
 import java.sql.Timestamp;
+import java.util.UUID;
 
 public class Event implements Serializable {
     String type;
-    Timestamp timestamp;
-    int publisher;
+    Timestamp timestamp; // used as an id
     FruitItem fruitItem;
+    UUID uuid;
 
-    public Event(String type, Timestamp timestamp, int publisher, FruitItem fruitItem){
+    public Event(UUID uuid, String type, Timestamp timestamp, FruitItem fruitItem){
+        this.uuid = uuid;
         this.type = type;
         this.timestamp = timestamp;
-        this.publisher = publisher;
         this.fruitItem = fruitItem;
     }
 

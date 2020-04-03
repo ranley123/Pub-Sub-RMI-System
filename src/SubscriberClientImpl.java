@@ -9,11 +9,15 @@ public class SubscriberClientImpl extends UnicastRemoteObject implements IClient
 
 
     @Override
-    public void notify(String message) throws RemoteException {
-        System.out.println("Subscriber client: " + message);
-        String fruitName = "apple";
-        Message response = new Message("response", fruitName + " received", 0, this.name);
-        stub.receiveMessage(response);
+    public void notify(Message message) throws RemoteException {
+        System.out.println("sender: " + message.senderName + " content: " + message.content);
+        Message response;
+        if(message.type.equals("subscribe")){
+//            int index = message.content.indexOf(":");
+            response = new Message("response", "apple" + " received", 0, this.name);
+            response.setMessageChannelId(message.messageChannelId);
+            stub.addMessage(response);
+        }
     }
 
     public SubscriberClientImpl() throws RemoteException{

@@ -8,6 +8,7 @@ import java.rmi.server.UnicastRemoteObject;
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.Scanner;
+import java.util.UUID;
 
 public class PublisherClient extends UnicastRemoteObject implements IClient, Serializable {
     private IServer stub;
@@ -25,7 +26,8 @@ public class PublisherClient extends UnicastRemoteObject implements IClient, Ser
         Date date= new Date();
         long time = date.getTime();
         Timestamp ts = new Timestamp(time);
-        Event publishEvent = new Event("publish", ts, this.id, fruitItem);
+        UUID uuid = UUID.randomUUID();
+        Event publishEvent = new Event(uuid, "publish", ts, fruitItem);
         int errcode = stub.addEvent(publishEvent);
         errorHandler(errcode);
 
@@ -34,8 +36,9 @@ public class PublisherClient extends UnicastRemoteObject implements IClient, Ser
     private void update(FruitItem fruitItem){
         Date date= new Date();
         long time = date.getTime();
+        UUID uuid = UUID.randomUUID();
         Timestamp ts = new Timestamp(time);
-        Event updateEvent = new Event("update", ts, this.id, fruitItem);
+        Event updateEvent = new Event(uuid, "update", ts, fruitItem);
 //        stub.update(updateEvent);
     }
 
@@ -46,8 +49,8 @@ public class PublisherClient extends UnicastRemoteObject implements IClient, Ser
     }
 
     @Override
-    public void notify(String message) throws RemoteException {
-        System.out.println("message: " + message);
+    public void notify(Message message) throws RemoteException {
+        System.out.println("sender: " + message.senderName + " content: " + message.content);
     }
 
     public static void main(String[] args) {
