@@ -5,7 +5,7 @@ import java.util.Queue;
 public class EventChannel {
     private ArrayList<String> subscriberList;
     private Queue<Event> eventQueue; // maximum size = 1
-    private int size = 0;
+    private int limit = 0;
     private String name;
     ConsumerThread consumerThread;
 
@@ -19,12 +19,11 @@ public class EventChannel {
     }
 
     public synchronized int produce(Event event){
-        if(size == 1){
+        if(eventQueue.size() == limit){
             return 1;
         }
         else{
             eventQueue.add(event);
-            size++;
             return 0;
         }
     }

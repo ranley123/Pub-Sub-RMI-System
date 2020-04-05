@@ -1,119 +1,87 @@
-import java.io.Serializable;
 import java.rmi.AccessException;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
-import java.rmi.server.UnicastRemoteObject;
-import java.sql.Timestamp;
-import java.util.Date;
 import java.util.Scanner;
-import java.util.UUID;
 
-public class PublisherClient extends UnicastRemoteObject implements IClient, Serializable {
-    private IServer stub;
-    int id;
-
-    protected PublisherClient(int id) throws RemoteException {
-        this.id = id;
-    }
-
-    public int getId() {
-        return id;
-    }
-
-    private void generatePublishEvent(FruitItem fruitItem) throws RemoteException {
-        Date date= new Date();
-        long time = date.getTime();
-        Timestamp ts = new Timestamp(time);
-        UUID uuid = UUID.randomUUID();
-        Event publishEvent = new Event(uuid, "publish", ts, fruitItem);
-        int errcode = stub.addEvent(publishEvent);
-        errorHandler(errcode);
-
-    }
-
-    private void update(FruitItem fruitItem){
-        Date date= new Date();
-        long time = date.getTime();
-        UUID uuid = UUID.randomUUID();
-        Timestamp ts = new Timestamp(time);
-        Event updateEvent = new Event(uuid, "update", ts, fruitItem);
-//        stub.update(updateEvent);
-    }
-
-    private void displayMenu(){
-        System.out.println("Menu: ");
-        System.out.println("(0) Publish a fruit");
-        System.out.println("(1) Update a fruit");
-    }
-
-    @Override
-    public void notify(Message message) throws RemoteException {
-        System.out.println("sender: " + message.senderName + " content: " + message.content);
+public class PublisherClient extends PublisherClientImpl{
+    static int port = 1888;
+    protected PublisherClient() throws RemoteException {
     }
 
     public static void main(String[] args) {
-        try {
-            PublisherClient publisher = new PublisherClient(0);
-            Registry registry = LocateRegistry.getRegistry(null, 1888);
-            publisher.stub = (IServer) registry.lookup("server");
-            System.out.println("Registered");
-            Scanner scanner = new Scanner(System.in);
+        PublisherClientImpl publisher = null;
+        boolean exit = false;
 
-            boolean exit = false;
 
-            do{
-                publisher.displayMenu();
-                System.out.println("Please enter a number to act");
+        while(exit == false){
+            try {
+                publisher = new PublisherClientImpl();
+                Registry registry = LocateRegistry.getRegistry(null, port);
+                publisher.stub = (IServer) registry.lookup("server");
 
-                int operation = scanner.nextInt();
-                FruitItem fruitItem;
-                switch (operation) {
-                    case 0:
-                    System.out.println("Enter Fruit Name: ");
-                    String fruitName = scanner.next();
-                    System.out.println("Enter Fruit Price: ");
-                    double price = scanner.nextDouble();
+                Scanner scanner = new Scanner(System.in);
 
-                        fruitItem = new FruitItem(fruitName, price);
-                        publisher.generatePublishEvent(fruitItem);
-                        System.out.println("published");
+                do{
+                    publisher.displayMenu();
+                    System.out.println("Please enter a number to act");
 
-                        break;
-                    case 1:
-                        fruitItem = new FruitItem("apple", 1.99);
-                        publisher.update(fruitItem);
-                        System.out.println("updated");
-                        break;
-                    default:
-                        System.out.println("Exit");
+                    int operation = scanner.nextInt();
+                    FruitItem fruitItem;
+                    switch (operation) {
+                        case 0:
+                            System.out.println("Enter Fruit Name: ");
+                            String fruitName = scanner.next();
+                            System.out.println("Enter Fruit Price: ");
+                            double price = scanner.nextDouble();
+
+                            fruitItem = new FruitItem(fruitName, price);
+                            publisher.generatePublishEvent(fruitItem);
+
+                            break;
+                        case 1:
+                            fruitItem = new FruitItem("apple", 1.99);
+                            publisher.update(fruitItem);
+                            System.out.println("updated");
+                            break;
+                        default:
+                            System.out.println("Exit");
+                    }
+
+                }while(exit == false);
+                scanner.close();
+            } catch (RemoteException | NotBoundException e) {
+//            e.printStackTrace();
+                int status = connection_handler(publisher);
+                if(status == 0){
+                    continue;
                 }
-
-            }while(exit == false);
-            scanner.close();
-        } catch (AccessException e) {
-            e.printStackTrace();
-        } catch (RemoteException e) {
-            e.printStackTrace();
-        } catch (NotBoundException e) {
-            e.printStackTrace();
+                else{
+                    System.err.println("Cannot reconnect to the server");
+                    break;
+                }
+            }
         }
     }
 
-    private void errorHandler(int errcode){
-        switch (errcode){
-            case 0:
-                System.out.println("successful");
-                break;
-            case 1:
-                System.out.println("too many queries");
-            case 2:
-                System.out.println("connection failures");
-            case 3:
-                System.out.println("crashing customers");
-            case 4:
-                System.out.println("dropped messages");
+    public static int connection_handler(PublisherClientImpl publisher){
+        int limit = 1;
+        while(limit <= 3){
+            System.out.println("reconnecting...");
+//            System.out.println("limit: " + limit);
+            try{
+                publisher = new PublisherClientImpl();
+                port = 1888;
+                Registry registry = LocateRegistry.getRegistry(null, port);
+                publisher.stub = (IServer) registry.lookup("server");
+                return 0;
+            }
+            catch(RemoteException | NotBoundException e){
+                limit++;
+                continue;
+            }
         }
+        return 1;
     }
 }
