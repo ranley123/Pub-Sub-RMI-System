@@ -18,13 +18,13 @@ public class EventChannel {
         consumerThread.start();
     }
 
-    public synchronized int produce(Event event){
+    public synchronized void produce(Event event) throws QueueIsFullException {
         if(eventQueue.size() == limit){
-            return 1;
+            limit++;
+            throw new QueueIsFullException("queue is full");
         }
         else{
             eventQueue.add(event);
-            return 0;
         }
     }
 

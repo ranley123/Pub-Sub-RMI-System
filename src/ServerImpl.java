@@ -1,4 +1,3 @@
-import javax.swing.*;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -23,24 +22,24 @@ public class ServerImpl extends UnicastRemoteObject implements IServer{
     }
 
     @Override
-    public int addEvent(Event event) throws RemoteException{
+    public void addEvent(Event event) throws RemoteException, DataLossException, QueueIsFullException {
+        if(checkEventDataLoss(event)){
+            throw new DataLossException("data loss");
+        }
         String fruitName = event.fruitItem.fruitName;
-//        System.out.println("adding event to channel");
-        int errcode;
 
         if(!eventChannelMap.containsKey(fruitName)){
             EventChannel newChannel = new EventChannel(fruitName);
             eventChannelMap.put(fruitName, newChannel);
-            errcode = newChannel.produce(event);
+            newChannel.produce(event);
 
 //            consumer = new ConsumerThread(newChannel);
 //            consumer.start();
         }
         else{
             EventChannel channel = eventChannelMap.get(fruitName);
-            errcode = channel.produce(event);
+            channel.produce(event);
         }
-        return errcode;
     }
 
     @Override
@@ -48,7 +47,6 @@ public class ServerImpl extends UnicastRemoteObject implements IServer{
         if(eventChannelMap.containsKey(fruitName)){
             EventChannel channel = eventChannelMap.get(fruitName);
             channel.addSubscriber(subscriberName);
-            System.out.println("successfully subscribe to " + fruitName);
         }
         else{
             EventChannel channel = new EventChannel(fruitName);
@@ -75,27 +73,31 @@ public class ServerImpl extends UnicastRemoteObject implements IServer{
 
     @Override
     public void publish(Event event) throws RemoteException {
-//        System.out.println("starts publishing");
+        boolean exists = false;
 
         for(int i = 0; i < fruitItemList.size(); i++){
             if(fruitItemList.get(i).fruitName.equals(event.fruitItem.fruitName)){
-                System.out.println("fruit already exists");
-                return;
+                fruitItemList.set(i, event.fruitItem);
+                exists = true;
+                break;
             }
         }
+        if(!exists){
+            fruitItemList.add(event.fruitItem);
+        }
 
-        fruitItemList.add(event.fruitItem);
         ArrayList<String> subscriberList = eventChannelMap.get(event.fruitItem.fruitName).getSubscriberList();
-//        System.out.println(subscriberList);
         Message subscribedMessage = new Message("subscribe", "fruit name: " + event.fruitItem.fruitName + " fruit price: " + event.fruitItem.price, 0, "server");
         subscribedMessage.setMessageChannelId(event.uuid);
 
-        MessageChannel messageChannel = new MessageChannel(this, subscribedMessage, subscriberList, "message");
+        MessageChannel messageChannel = new MessageChannel(this, subscribedMessage, new ArrayList<String>(subscriberList), "message");
         messageChannelMap.put(event.uuid, messageChannel);
 
         notifyClient(subscriberList, subscribedMessage);
 
         messageChannel.startReceivingMessage();
+        System.out.println(subscriberList.size());
+
     }
 
     @Override
@@ -120,7 +122,10 @@ public class ServerImpl extends UnicastRemoteObject implements IServer{
     }
 
     @Override
-    public void addMessage(Message message) throws RemoteException{
+    public void addMessage(Message message) throws RemoteException, DataLossException {
+        if (checkMessageDataLoss(message)){
+            throw new DataLossException("data loss");
+        }
         messageChannelMap.get(message.messageChannelId).produce(message);
     }
 
@@ -139,4 +144,38 @@ public class ServerImpl extends UnicastRemoteObject implements IServer{
             e.printStackTrace();
         }
     }
+
+    private boolean checkEventDataLoss(Event event){
+        try{
+            if(event.type == null || event.type.length() == 0){
+                return true;
+            }
+            if(event.timestamp == null){
+                return true;
+            }
+            if(event.fruitItem == null){
+                return true;
+            }
+            if(event.uuid == null){
+                return true;
+            }
+            return false;
+        }
+        catch (Exception e){
+            return true;
+        }
+    }
+
+    private boolean checkMessageDataLoss(Message message){
+        try{
+            return (message.type == null || message.type.length() == 0 || message.content == null
+                    || message.content.length() == 0 || message.status <= 0 || message.senderName == null
+                    || message.senderName.length() == 0 || message.messageChannelId == null);
+        }
+        catch (Exception e){
+            return true;
+        }
+    }
+
+
 }

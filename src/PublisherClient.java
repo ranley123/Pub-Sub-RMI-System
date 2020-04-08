@@ -1,4 +1,3 @@
-import java.rmi.AccessException;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -25,7 +24,7 @@ public class PublisherClient extends PublisherClientImpl{
 
                 do{
                     publisher.displayMenu();
-                    System.out.println("Please enter a number to act");
+                    System.out.println("Please enter a number");
 
                     int operation = scanner.nextInt();
                     FruitItem fruitItem;
@@ -39,11 +38,6 @@ public class PublisherClient extends PublisherClientImpl{
                             fruitItem = new FruitItem(fruitName, price);
                             publisher.generatePublishEvent(fruitItem);
 
-                            break;
-                        case 1:
-                            fruitItem = new FruitItem("apple", 1.99);
-                            publisher.update(fruitItem);
-                            System.out.println("updated");
                             break;
                         default:
                             System.out.println("Exit");

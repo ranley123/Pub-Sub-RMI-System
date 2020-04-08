@@ -2,6 +2,8 @@ import java.io.Serializable;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 
+import static java.lang.Thread.sleep;
+
 public class SubscriberClientImpl extends UnicastRemoteObject implements IClient, Serializable {
     String name;
     IServer stub;
@@ -16,7 +18,22 @@ public class SubscriberClientImpl extends UnicastRemoteObject implements IClient
 //            int index = message.content.indexOf(":");
             response = new Message("response", "apple" + " received", 0, this.name);
             response.setMessageChannelId(message.messageChannelId);
-            stub.addMessage(response);
+            int limit = 1;
+            while(limit <= 3){
+                try{
+                    stub.addMessage(response);
+                } catch (DataLossException e) {
+                    e.getMessage();
+                    limit++;
+                    try{
+                        sleep(1000);
+                    } catch (InterruptedException j) {
+                        j.printStackTrace();
+                    }
+                    continue;
+                }
+                break;
+            }
         }
     }
 
