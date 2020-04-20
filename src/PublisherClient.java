@@ -4,15 +4,16 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.util.Scanner;
 
+import static java.lang.Thread.sleep;
+
 public class PublisherClient extends PublisherClientImpl{
     static int port = 1888;
     protected PublisherClient() throws RemoteException {
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws InterruptedException {
         PublisherClientImpl publisher = null;
         boolean exit = false;
-
 
         while(exit == false){
             try {
@@ -26,15 +27,38 @@ public class PublisherClient extends PublisherClientImpl{
                     publisher.displayMenu();
                     System.out.println("Please enter a number");
 
-                    int operation = scanner.nextInt();
                     FruitItem fruitItem;
+                    String input = scanner.next();
+                    int operation = 0;
+
+                    // get user input
+                    try{
+                        operation = Integer.parseInt(input);
+                    }
+                    catch(NumberFormatException e){
+                        System.err.println("Please enter a number");
+                        continue;
+                    }
+
                     switch (operation) {
-                        case 0:
+                        case 0: // put or update a new fruit item
                             System.out.println("Enter Fruit Name: ");
                             String fruitName = scanner.next();
-                            System.out.println("Enter Fruit Price: ");
-                            double price = scanner.nextDouble();
 
+                            System.out.println("Enter Fruit Price: ");
+                            double price = 0;
+                            input = scanner.next();
+
+                            // check input type
+                            try{
+                                price = Double.parseDouble(input);
+                            }
+                            catch(NumberFormatException e){
+                                System.err.println("Please enter a number");
+                                continue;
+                            }
+
+                            // creates an event and publishs it
                             fruitItem = new FruitItem(fruitName, price);
                             publisher.generatePublishEvent(fruitItem);
 
@@ -59,8 +83,15 @@ public class PublisherClient extends PublisherClientImpl{
         }
     }
 
-    public static int connection_handler(PublisherClientImpl publisher){
+    /**
+     * handle connection interruptions and unexpected exceptions
+     * @param publisher
+     * @return
+     * @throws InterruptedException
+     */
+    public static int connection_handler(PublisherClientImpl publisher) throws InterruptedException {
         int limit = 1;
+        // the max trial times: 3
         while(limit <= 3){
             System.out.println("reconnecting...");
 //            System.out.println("limit: " + limit);
@@ -71,8 +102,10 @@ public class PublisherClient extends PublisherClientImpl{
                 publisher.stub = (IServer) registry.lookup("server");
                 return 0;
             }
+            // if reconnecting fails, waits for server recovery and tries again later
             catch(RemoteException | NotBoundException e){
                 limit++;
+                sleep(5000); // wait for recovery
                 continue;
             }
         }

@@ -1,4 +1,7 @@
-import javax.xml.crypto.Data;
+import Exceptions.DataLossException;
+import Exceptions.DuplicateException;
+import Exceptions.QueueIsFullException;
+
 import java.io.Serializable;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
@@ -10,13 +13,8 @@ import static java.lang.Thread.sleep;
 
 public class PublisherClientImpl extends UnicastRemoteObject implements IClient, Serializable {
     public IServer stub;
-    int id;
 
     protected PublisherClientImpl() throws RemoteException {
-    }
-
-    public int getId() {
-        return id;
     }
 
     public void generatePublishEvent(FruitItem fruitItem) throws RemoteException {
@@ -31,10 +29,10 @@ public class PublisherClientImpl extends UnicastRemoteObject implements IClient,
         // send event
         while(limit <= 3){
             try{
-                stub.addEvent(null);
+                stub.addEvent(publishEvent);
             }
             catch (DataLossException | QueueIsFullException e){
-                e.getMessage();
+                System.out.println("DataLossException");
                 limit++;
                 try{
                     sleep(1000);
@@ -45,6 +43,10 @@ public class PublisherClientImpl extends UnicastRemoteObject implements IClient,
             }
             catch (RemoteException e){
                 e.printStackTrace();
+            }
+            catch (DuplicateException e){
+                System.out.println("Duplicate event, dropped");
+                break;
             }
             break;
         }

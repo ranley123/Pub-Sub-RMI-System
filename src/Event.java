@@ -2,11 +2,14 @@ import java.io.Serializable;
 import java.sql.Timestamp;
 import java.util.UUID;
 
+/**
+ * The permanent message for operation
+ */
 public class Event implements Serializable {
-    String type;
-    Timestamp timestamp; // used as an id
-    FruitItem fruitItem;
-    UUID uuid;
+    String type; // topic
+    Timestamp timestamp;
+    FruitItem fruitItem; // payload
+    UUID uuid; // unique id for identification
 
     public Event(UUID uuid, String type, Timestamp timestamp, FruitItem fruitItem){
         this.uuid = uuid;

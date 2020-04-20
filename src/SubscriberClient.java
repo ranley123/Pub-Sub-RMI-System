@@ -1,9 +1,7 @@
-import java.io.Serializable;
-import java.net.MalformedURLException;
 import java.rmi.*;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
-import java.rmi.server.UnicastRemoteObject;
+import java.rmi.server.ExportException;
 import java.util.Scanner;
 
 public class SubscriberClient extends SubscriberClientImpl{
@@ -12,6 +10,10 @@ public class SubscriberClient extends SubscriberClientImpl{
     }
 
     public static void main(String[] args) { // args: port, name
+        if(args.length != 2){
+            System.out.println("Usage: java SubscriberClient [port] [name]");
+            return;
+        }
         try{
             Scanner scanner = new Scanner(System.in);
             SubscriberClientImpl subscriber = new SubscriberClientImpl();
@@ -33,11 +35,19 @@ public class SubscriberClient extends SubscriberClientImpl{
             do{
                 displayMenu();
                 System.out.println("Please enter a number to act");
-                int operation = scanner.nextInt();
+                String input = scanner.next();
+                int operation = 0;
+                try{
+                    operation = Integer.parseInt(input);
+                }
+                catch(NumberFormatException e){
+                    System.err.println("Please enter a number");
+                    continue;
+                }
                 switch (operation){
                     case 0:
                         System.out.println("Enter the fruit name you want to subscribe: ");
-                        String input = scanner.next();
+                        input = scanner.next();
                         subscriber.subscribe(input);
                         System.out.println("Successfully subscribed");
                         break;
@@ -54,23 +64,23 @@ public class SubscriberClient extends SubscriberClientImpl{
             }while(exit == false);
 
             scanner.close();
-        } catch (AccessException e) {
+        }
+        catch(ExportException e){
+            System.err.println("Port number " + args[0] + " is used or not valid");
+            System.err.println("Usage: java SubscriberClient [port] [name]");
+        }
+        catch (AccessException e) {
             e.printStackTrace();
         } catch (RemoteException e) {
             e.printStackTrace();
         } catch (NotBoundException e) {
             e.printStackTrace();
         }
-
-
     }
-
 
     private static void displayMenu(){
         System.out.println("Menu");
         System.out.println("(0) Subscribe");
         System.out.println("(1) UnSubscribe");
     }
-
-
 }
