@@ -35,6 +35,7 @@ public class SubscriberClient extends SubscriberClientImpl{
             do{
                 displayMenu();
                 System.out.println("Please enter a number to act");
+                // check user input
                 String input = scanner.next();
                 int operation = 0;
                 try{
@@ -44,14 +45,16 @@ public class SubscriberClient extends SubscriberClientImpl{
                     System.err.println("Please enter a number");
                     continue;
                 }
+
+                // act based on user input
                 switch (operation){
-                    case 0:
+                    case 0: // subscribe
                         System.out.println("Enter the fruit name you want to subscribe: ");
                         input = scanner.next();
                         subscriber.subscribe(input);
                         System.out.println("Successfully subscribed");
                         break;
-                    case 1:
+                    case 1: // unsubscribe
                         System.out.println("Enter the fruit name you want to unsubscribe: ");
                         input = scanner.next();
                         subscriber.unsubscribe(input);

@@ -128,7 +128,7 @@ public class ServerImpl extends UnicastRemoteObject implements IServer{
         subscribedMessage.setMessageChannelId(event.uuid);
 
         // creates a new message channel to hold "response" type acknowledgement messages from subscribers
-        MessageChannel messageChannel = new MessageChannel(this, subscribedMessage, new ArrayList<String>(subscriberList), "message");
+        MessageChannel messageChannel = new MessageChannel(this, subscribedMessage, new ArrayList<>(subscriberList), "message");
         // because the channel is for the specific event's response
         messageChannelMap.put(event.uuid, messageChannel);
 

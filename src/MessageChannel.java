@@ -3,12 +3,12 @@ import java.util.LinkedList;
 import java.util.Queue;
 
 public class MessageChannel {
-    private Queue<Message> messageQueue;
-    private int size = 0; // the current size of queue
+    private int LIMIT;
     private String name;
     MessageThread messageThread;
     private ServerImpl server;
     ArrayList<String> subscriberList; // a list of subscribers who should send response messages
+    ArrayList<Queue<Message>> queues;
 
     // related message for subscribers (such as subscribing message about fruits)
     // if there is a crashing subscriber, relatedMessage can be used to re-send to it
@@ -17,9 +17,11 @@ public class MessageChannel {
     public MessageChannel(ServerImpl server, Message relatedMessage, ArrayList<String> subscriberList, String name){
         this.server = server;
         this.name = name;
-        messageQueue = new LinkedList<>();
         this.subscriberList = subscriberList;
         this.relatedMessage = relatedMessage;
+
+        queues = new ArrayList<>();
+        LIMIT = subscriberList.size() + 1;
     }
 
     /**
@@ -28,14 +30,13 @@ public class MessageChannel {
      * @return
      */
     public synchronized int produce(Message message){
-        if(size == 5){
-            return 1;
+        if(queues.size() == 0){
+            Queue<Message> newQueue = new LinkedList<>();
+            queues.add(newQueue);
         }
-        else{
-            messageQueue.add(message);
-            size++;
-            return 0;
-        }
+        Queue<Message> curQueue = queues.get(queues.size() - 1);
+        curQueue.add(message);
+        return 0;
     }
 
     /**
@@ -43,10 +44,17 @@ public class MessageChannel {
      * @return
      */
     public synchronized Message consume(){
-        if(messageQueue.peek() == null)
+        if(queues.size() == 0){
             return null;
+        }
+        Queue<Message> curQueue = queues.get(0);
+
+        if(curQueue.peek() == null){
+            queues.remove(curQueue);
+            return null;
+        }
         else
-            return messageQueue.poll();
+            return curQueue.poll();
     }
 
     /**
