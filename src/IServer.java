@@ -1,15 +1,18 @@
+import Exceptions.DataLossException;
+import Exceptions.DuplicateException;
+import Exceptions.QueueIsFullException;
+
 import java.rmi.Remote;
 import java.rmi.RemoteException;
-public interface IServer extends Remote{
-    public void subscribe(String channel, String subscriberName) throws RemoteException;
-    public void unsubscribe(String channel, String subscriberName) throws RemoteException;
-    public void publish(Event event) throws RemoteException;
-    public void register(int port, String name) throws RemoteException;
-    public void notify(String message) throws RemoteException;
-    public String notifyClient() throws RemoteException;
-    public void update(Event event) throws RemoteException;
-    public String ping() throws RemoteException;
+import java.util.UUID;
 
-    public void addEvent(Event event) throws RemoteException;
-//    void delete(Event event);
+public interface IServer extends Remote{
+    void subscribe(String channel, String subscriberName) throws RemoteException;
+    void unsubscribe(String channel, String subscriberName) throws RemoteException;
+    void publish(Event event) throws RemoteException;
+    void register(int port, String name) throws RemoteException;
+    void notify(Message message) throws RemoteException;
+    void addEvent(Event event) throws RemoteException, DataLossException, QueueIsFullException, DuplicateException;
+    void addMessage(Message message) throws RemoteException, DataLossException;
+    void addUUID(UUID uuid) throws RemoteException, DuplicateException;
 }

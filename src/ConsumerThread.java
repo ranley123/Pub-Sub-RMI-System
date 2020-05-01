@@ -5,10 +5,10 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 
 public class ConsumerThread extends Thread {
-    private Channel channel;
-    private IServer stub;
+    private EventChannel channel;
+    private IServer stub; //  the stub of the server
 
-    public ConsumerThread(Channel channel){
+    public ConsumerThread(EventChannel channel){
         this.channel = channel;
         try{
             Registry registry = LocateRegistry.getRegistry(null, 1888);
@@ -22,19 +22,19 @@ public class ConsumerThread extends Thread {
         }
     }
 
+    /**
+     * if there is no event in the channel, sleep for a while to wait
+     * otherwise, processes the event
+     */
     public void run(){
         Event event;
         System.out.println("consumer starts");
         try{
             while(true){
                 event = channel.consume();
-//                if(event == null)
-//                    System.out.println("event: null");
-//                else
-//                    System.out.println("event: " + event.toString());
-                if(event == null)
+                if(event == null) // sleep to wait for further incoming events
                     sleep(500);
-                else
+                else // consumes the current event
                     stub.publish(event);
             }
         } catch (InterruptedException | RemoteException e) {
